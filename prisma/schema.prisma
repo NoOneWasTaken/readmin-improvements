@@ -1,0 +1,64 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Server {
+  serverId    String   @id
+  serverToken String   @unique
+  startTime   DateTime @default(now())
+  region      String
+
+  playerCount Int       @default(0)
+  players     Player[]
+  chatLogs    ChatLog[]
+}
+
+model Player {
+  playerId       String   @id @unique
+  username       String
+  profileImage   String
+  serverJoinTime DateTime @default(now())
+
+  serverId String
+  server   Server @relation(fields: [serverId], references: [serverId], onDelete: Cascade)
+
+  chatLogs ChatLog[]
+}
+
+model ChatLog {
+  chatId    String   @id @unique @default(uuid(7))
+  message   String
+  timestamp DateTime @default(now())
+
+  playerId String
+  player   Player @relation(fields: [playerId], references: [playerId], onDelete: Cascade)
+
+  serverId String
+  server   Server @relation(fields: [serverId], references: [serverId], onDelete: Cascade)
+
+  @@index([playerId])
+  @@index([serverId])
+  @@index([timestamp])
+  @@index([serverId, timestamp(sort: Desc)])
+}
+
+model Workspace {
+  workspaceId String   @id @unique @default(uuid(7))
+  name        String
+  icon        String
+  createdAt   DateTime @default(now())
+
+  members     WorkspaceMember[]
+  games       WorkspaceGame[]
+  events      WorkspaceEvent[]
+  notices     WorkspaceNotice[]
+  assignments WorkspaceAssignment[]
+
+  @@ignore
+}
